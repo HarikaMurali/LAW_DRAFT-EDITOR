@@ -3,6 +3,38 @@ const router = express.Router();
 const Draft = require('../models/Draft');
 const auth = require('../middleware/auth'); // Import the middleware
 
+// @route   GET /api/drafts/debug
+// @desc    Debug endpoint to check all drafts (for testing purposes)
+// @access  Public (temporary for debugging)
+router.get('/debug', async (req, res) => {
+    try {
+        const totalDrafts = await Draft.countDocuments();
+        const allDrafts = await Draft.find().sort({ createdAt: -1 }).limit(10);
+        
+        res.json({
+            debug: true,
+            totalDrafts,
+            recentDrafts: allDrafts.map(draft => ({
+                id: draft._id,
+                title: draft.title,
+                caseType: draft.caseType,
+                userId: draft.userId,
+                createdAt: draft.createdAt,
+                hasText: !!draft.draftText,
+                textLength: draft.draftText ? draft.draftText.length : 0
+            }))
+        });
+    } catch (error) {
+        res.json({ 
+            debug: true,
+            error: 'Database connection error',
+            details: error.message,
+            totalDrafts: 0,
+            recentDrafts: []
+        });
+    }
+});
+
 // @route   POST /api/drafts
 // @desc    Save a new draft
 // @access  Private
