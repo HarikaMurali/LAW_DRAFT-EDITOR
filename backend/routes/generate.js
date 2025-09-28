@@ -1,21 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { OpenAI } = require('openai');
 const Draft = require('../models/Draft');
 const auth = require('../middleware/auth');
 
 // Access your API key as an environment variable
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Generate full draft
 router.post('/', async (req, res) => {
   try {
     const { caseType, details, jurisdiction } = req.body;
-    
+
     // Validate API key
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('Gemini API key is not configured');
-      return res.status(500).json({ error: 'Server configuration error: Gemini API key not found' });
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is not configured');
+      return res.status(500).json({ error: 'Server configuration error: OpenAI API key not found' });
     }
 
     // Enhanced input validation
@@ -28,47 +28,50 @@ router.post('/', async (req, res) => {
 
     console.log(`Generating draft for case type: ${caseType}, jurisdiction: ${jurisdiction || 'default'}`);
 
-    // Use a different model that is available in your region
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-
     const systemPrompt = `You are a professional legal-draft assistant. Your task is to generate a well-structured legal draft based on the provided details. Output a formatted legal draft with clear headings, numbered clauses, and a concise "legal basis" section with relevant citations where applicable.`;
     const userPrompt = `Generate a ${caseType} draft for jurisdiction: ${jurisdiction || 'default'}. Facts/details:\n${details}\n`;
 
-    const result = await model.generateContent([systemPrompt, userPrompt]);
-    const response = await result.response;
-    const text = response.text();
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo", // or "gpt-4" if available
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      max_tokens: 2048
+    });
+
+    const text = completion.choices[0].message.content;
 
     if (!text) {
-      throw new Error('Invalid response from Gemini');
+      throw new Error('Invalid response from OpenAI');
     }
 
     console.log('Draft generated successfully, length:', text.length);
 
-    res.json({ 
+    res.json({
       draft: text,
       metadata: {
-        model: "gemini-1.5-pro",
+        model: "gpt-3.5-turbo",
         caseType,
         jurisdiction: jurisdiction || 'default',
         timestamp: new Date().toISOString()
       }
     });
 
-  } catch(err) {
-    console.error("Gemini API error:", err);
-    
-    // Handle specific error types from Gemini API
+  } catch (err) {
+    console.error("OpenAI API error:", err);
+
     if (err.message.includes('429')) {
       return res.status(429).json({
         error: 'Service temporarily unavailable due to rate limiting or quota exceeded',
-        details: 'Please check your Google Cloud account for billing and try again later.'
+        details: 'Please check your OpenAI account for billing and try again later.'
       });
     }
 
-    if (err.message.includes('fetch failed') || err.message.includes('API key')) {
+    if (err.message.includes('API key')) {
       return res.status(500).json({
         error: 'API configuration error',
-        details: 'Please verify that the Gemini API key is properly configured and has access to the required model.'
+        details: 'Please verify that the OpenAI API key is properly configured and has access to the required model.'
       });
     }
 
@@ -83,13 +86,13 @@ router.post('/', async (req, res) => {
 router.post('/save', auth, async (req, res) => {
   try {
     const { caseType, details, jurisdiction, title } = req.body;
-    
+
     console.log(`User ${req.user.userId} generating and saving draft for case type: ${caseType}`);
-    
+
     // Validate API key
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('Gemini API key is not configured');
-      return res.status(500).json({ error: 'Server configuration error: Gemini API key not found' });
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OpenAI API key is not configured');
+      return res.status(500).json({ error: 'Server configuration error: OpenAI API key not found' });
     }
 
     // Enhanced input validation
@@ -103,18 +106,22 @@ router.post('/save', auth, async (req, res) => {
       return res.status(400).json({ error: 'Please provide a title for the draft (minimum 3 characters)' });
     }
 
-    // Use a different model that is available in your region
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-
     const systemPrompt = `You are a professional legal-draft assistant. Your task is to generate a well-structured legal draft based on the provided details. Output a formatted legal draft with clear headings, numbered clauses, and a concise "legal basis" section with relevant citations where applicable.`;
     const userPrompt = `Generate a ${caseType} draft for jurisdiction: ${jurisdiction || 'default'}. Facts/details:\n${details}\n`;
 
-    const result = await model.generateContent([systemPrompt, userPrompt]);
-    const response = await result.response;
-    const text = response.text();
+    const completion = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ],
+      max_tokens: 2048
+    });
+
+    const text = completion.choices[0].message.content;
 
     if (!text) {
-      throw new Error('Invalid response from Gemini');
+      throw new Error('Invalid response from OpenAI');
     }
 
     // Save the generated draft to database
@@ -133,7 +140,7 @@ router.post('/save', auth, async (req, res) => {
       success: true,
       draft: savedDraft,
       metadata: {
-        model: "gemini-1.5-pro",
+        model: "gpt-3.5-turbo",
         caseType,
         jurisdiction: jurisdiction || 'default',
         timestamp: new Date().toISOString(),
@@ -141,25 +148,23 @@ router.post('/save', auth, async (req, res) => {
       }
     });
 
-  } catch(err) {
+  } catch (err) {
     console.error("Generate and save error:", err);
-    
-    // Handle specific error types from Gemini API
+
     if (err.message.includes('429')) {
       return res.status(429).json({
         error: 'Service temporarily unavailable due to rate limiting or quota exceeded',
-        details: 'Please check your Google Cloud account for billing and try again later.'
+        details: 'Please check your OpenAI account for billing and try again later.'
       });
     }
 
-    if (err.message.includes('fetch failed') || err.message.includes('API key')) {
+    if (err.message.includes('API key')) {
       return res.status(500).json({
         error: 'API configuration error',
-        details: 'Please verify that the Gemini API key is properly configured and has access to the required model.'
+        details: 'Please verify that the OpenAI API key is properly configured and has access to the required model.'
       });
     }
 
-    // Handle database errors
     if (err.name === 'ValidationError') {
       return res.status(400).json({
         error: 'Database validation error',
@@ -174,11 +179,11 @@ router.post('/save', auth, async (req, res) => {
   }
 });
 
-// Mock draft generation for testing (when Gemini API is not available)
+// Mock draft generation for testing (when OpenAI API is not available)
 router.post('/mock', async (req, res) => {
   try {
     const { caseType, details, jurisdiction } = req.body;
-    
+
     // Enhanced input validation
     if (!caseType || typeof caseType !== 'string') {
       return res.status(400).json({ error: 'Valid case type is required' });
@@ -220,7 +225,7 @@ Note: This is a mock draft generated for testing purposes. Please consult with a
 
     console.log('Mock draft generated successfully, length:', mockDraft.length);
 
-    res.json({ 
+    res.json({
       draft: mockDraft,
       metadata: {
         model: "mock-generator",
@@ -231,7 +236,7 @@ Note: This is a mock draft generated for testing purposes. Please consult with a
       }
     });
 
-  } catch(err) {
+  } catch (err) {
     console.error("Mock generation error:", err);
     res.status(500).json({
       error: 'Failed to generate mock draft',
@@ -244,9 +249,9 @@ Note: This is a mock draft generated for testing purposes. Please consult with a
 router.post('/mock-save', auth, async (req, res) => {
   try {
     const { caseType, details, jurisdiction, title } = req.body;
-    
+
     console.log(`User ${req.user.userId} generating and saving MOCK draft for case type: ${caseType}`);
-    
+
     // Enhanced input validation
     if (!caseType || typeof caseType !== 'string') {
       return res.status(400).json({ error: 'Valid case type is required' });
@@ -313,10 +318,9 @@ Note: This is a mock draft generated for testing purposes. Please consult with a
       }
     });
 
-  } catch(err) {
+  } catch (err) {
     console.error("Mock generate and save error:", err);
-    
-    // Handle database errors
+
     if (err.name === 'ValidationError') {
       return res.status(400).json({
         error: 'Database validation error',

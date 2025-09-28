@@ -12,7 +12,7 @@ The user's issue has been **successfully resolved**. The backend code was actual
 
 ### Root Cause:
 - 🔴 **MongoDB not running** → Database operations failing
-- 🔴 **Missing Gemini API key** → AI generation failing
+- 🔴 **Missing OpenAI API key** → AI generation failing
 - 🟡 **No debugging tools** → Hard to diagnose issues
 
 ## ⚡ **Solutions Implemented**
@@ -20,10 +20,10 @@ The user's issue has been **successfully resolved**. The backend code was actual
 ### 1. **Enhanced Draft Generation System**
 ```javascript
 // NEW: Unified generate + save endpoint
-POST /api/generate/save  // Generates with Gemini AND saves to DB
+POST /api/generate/save  // Generates with OpenAI AND saves to DB
 
 // EXISTING: Generate only
-POST /api/generate       // Generates with Gemini (doesn't save)
+POST /api/generate       // Generates with OpenAI (doesn't save)
 
 // NEW: Mock endpoints for testing
 POST /api/generate/mock      // Works without API key
@@ -100,16 +100,16 @@ sudo systemctl start mongodb
 # Get connection string from atlas.mongodb.com
 ```
 
-### 2. **Get Gemini API Key**
+### 2. **Get OpenAI API Key**
 ```bash
-# Visit: https://makersuite.google.com/app/apikey
+# Visit: https://platform.openai.com/api-keys
 # Create API key and add to .env
 ```
 
 ### 3. **Update .env file**
 ```env
 MONGO_URI=mongodb://localhost:27017/law_db  # or Atlas URI
-GEMINI_API_KEY=your_api_key_here
+OPENAI_API_KEY=your_api_key_here
 JWT_SECRET=your_secure_secret_here
 PORT=5000
 ```
@@ -146,7 +146,7 @@ curl http://localhost:5000/api/drafts -H "Authorization: Bearer $TOKEN"
 | ✅ Error Handling | **WORKING** | Clear, specific error messages |
 | ✅ Debugging Tools | **WORKING** | Debug endpoint shows system status |
 | ⏳ Database Operations | **PENDING** | Needs MongoDB connection |
-| ⏳ Gemini AI Integration | **PENDING** | Needs API key configuration |
+| ⏳ OpenAI Integration | **PENDING** | Needs API key configuration |
 
 ## 🎉 **Conclusion**
 

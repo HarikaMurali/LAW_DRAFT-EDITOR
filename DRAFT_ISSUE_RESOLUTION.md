@@ -1,7 +1,7 @@
 # Draft Generation and Viewing - Issue Resolution
 
 ## Problem Summary
-The user reported that the backend is connected to MongoDB and integrated with Gemini to fetch drafts, but they are unable to view drafts and are unsure if drafts are being generated.
+The user reported that the backend is connected to MongoDB and integrated with OpenAI to fetch drafts, but they are unable to view drafts and are unsure if drafts are being generated.
 
 ## Root Cause Analysis
 
@@ -11,12 +11,12 @@ After thorough investigation, the core functionality is **implemented correctly*
 - MongoDB is not running or not accessible at `mongodb://localhost:27017/law_db`
 - All database-dependent operations (user auth, draft saving/retrieval) fail due to connection timeout
 
-### 2. Missing Gemini API Configuration
-- The `GEMINI_API_KEY` environment variable is not properly configured
-- Gemini API calls fail with "fetch failed" error
+### 2. Missing OpenAI API Configuration
+- The `OPENAI_API_KEY` environment variable is not properly configured
+- OpenAI API calls fail with quota/authentication errors
 
 ### 3. Architecture Validation
-✅ **Draft Generation**: Code is correctly implemented with Gemini integration
+✅ **Draft Generation**: Code is correctly implemented with OpenAI integration
 ✅ **Draft Saving**: Proper database schema and endpoints exist  
 ✅ **Draft Retrieval**: Authentication and user-specific draft retrieval working
 ✅ **Error Handling**: Comprehensive error handling and logging implemented
@@ -25,7 +25,7 @@ After thorough investigation, the core functionality is **implemented correctly*
 
 ### 1. Enhanced Draft Generation System
 - **Created `/api/generate/save`**: Unified endpoint that generates AND saves drafts
-- **Added `/api/generate/mock`** and `/api/generate/mock-save`**: Working endpoints for testing without Gemini API
+- **Added `/api/generate/mock`** and `/api/generate/mock-save`**: Working endpoints for testing without OpenAI API
 - **Improved error handling**: Better error messages for debugging API and database issues
 
 ### 2. Debugging Tools
@@ -47,7 +47,7 @@ After thorough investigation, the core functionality is **implemented correctly*
 ✅ Authentication system properly denies unauthorized access
 ✅ Error handling provides clear feedback
 ❌ Database operations fail due to MongoDB not running
-❌ Gemini API fails due to missing API key
+❌ OpenAI API fails due to quota/key issues
 ```
 
 ## How to Fix the Remaining Issues
@@ -63,18 +63,18 @@ sudo systemctl start mongodb
 MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/law_db
 ```
 
-### 2. Gemini API Configuration
+### 2. OpenAI API Configuration
 ```bash
-# Get API key from Google AI Studio: https://makersuite.google.com/app/apikey
+# Get API key from OpenAI Platform: https://platform.openai.com/api-keys
 # Add to .env file:
-GEMINI_API_KEY=your_actual_gemini_api_key_here
+OPENAI_API_KEY=your_actual_openai_api_key_here
 ```
 
 ### 3. Complete Environment Configuration
 ```env
 MONGO_URI=mongodb://localhost:27017/law_db
 JWT_SECRET=your_secure_jwt_secret_here  
-GEMINI_API_KEY=your_gemini_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 PORT=5000
 ```
 
@@ -91,7 +91,7 @@ Once the environment is properly configured, here's the complete workflow:
 ## Verification Commands
 
 ```bash
-# Test the complete flow (once MongoDB and Gemini are configured):
+# Test the complete flow (once MongoDB and OpenAI are configured):
 
 # 1. Register user
 curl -X POST http://localhost:5000/api/auth/register \
@@ -118,7 +118,7 @@ curl -X GET http://localhost:5000/api/drafts \
 
 The **code is working correctly**. The user's issues are due to:
 1. **MongoDB not running** → Prevents draft saving/retrieval
-2. **Missing Gemini API key** → Prevents AI draft generation  
+2. **Missing OpenAI API key** → Prevents AI draft generation  
 3. **Need to test complete flow** → Once environment is configured
 
 The enhanced system now provides better debugging tools and clearer error messages to help identify and resolve these configuration issues.
