@@ -110,17 +110,17 @@ const Dashboard = () => {
         </div>
         
         {/* Main content grid with clean white cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
+        <div className="grid grid-cols-1 xl:grid-cols-6 gap-6">
+          <div className="xl:col-span-1">
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-lg">
               <DraftList drafts={drafts} onSelectDraft={handleSelectDraft} />
             </div>
           </div>
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-5 flex flex-col space-y-6">
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg">
               <DraftForm onGenerateDraft={handleGenerateDraft} isLoading={isLoading} />
             </div>
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg w-full">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg flex-1 min-h-0">
               <DraftEditor
                 draftText={draftText}
                 onDraftChange={setDraftText}

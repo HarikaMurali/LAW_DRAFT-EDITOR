@@ -1,6 +1,63 @@
 import React from 'react';
 
 const DraftEditor = ({ draftText, onDraftChange, onSaveDraft, isLoading }) => {
+  
+  const handleDownloadPDF = () => {
+    if (!draftText) {
+      alert('No draft content to download');
+      return;
+    }
+
+    // Create a new window for PDF generation
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Legal Draft</title>
+        <style>
+          body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #000;
+          }
+          h1, h2, h3 {
+            color: #000;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          .content {
+            white-space: pre-line;
+            font-size: 12pt;
+          }
+          @media print {
+            body { margin: 20px; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Legal Document</h1>
+          <p>Generated on: ${new Date().toLocaleDateString()}</p>
+        </div>
+        <div class="content">${draftText}</div>
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
   return (
     <div>
       <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
@@ -21,18 +78,27 @@ const DraftEditor = ({ draftText, onDraftChange, onSaveDraft, isLoading }) => {
           <textarea
             value={draftText}
             onChange={(e) => onDraftChange(e.target.value)}
-            rows="20"
+            rows="25"
             placeholder="Your generated draft will appear here..."
-            className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl text-black placeholder-gray-500 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y font-mono text-base shadow-lg min-h-[500px]"
+            className="w-full py-4 px-6 bg-white border-2 border-gray-300 rounded-xl text-black placeholder-gray-500 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y font-mono text-base shadow-lg min-h-[600px]"
             style={{color: '#000000', backgroundColor: '#ffffff'}}
           ></textarea>
-          <button
-            onClick={onSaveDraft}
-            disabled={!draftText}
-            className="mt-4 w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            💾 Save Draft
-          </button>
+          <div className="mt-4 flex gap-4">
+            <button
+              onClick={onSaveDraft}
+              disabled={!draftText}
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              💾 Save Draft
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={!draftText}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              📄 Download PDF
+            </button>
+          </div>
         </>
       )}
     </div>
