@@ -1,87 +1,152 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import '../App.css';
 
 const Register = () => {
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await axios.post('http://localhost:5000/api/auth/register', { name, email, password });
-            navigate('/login');
-        } catch (err) {
-            setError(err.response.data.msg);
-        }
-    };
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
 
-    return (
-        <div className="flex items-center justify-center min-h-screen p-4">
-            <div className="bg-white/10 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-white/20 w-full max-w-md">
-                <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Create Account
-                </h1>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label className="block text-white/90 font-semibold mb-2" htmlFor="name">Full Name</label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-white/60 backdrop-blur-sm"
-                            placeholder="Enter your full name"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-white/90 font-semibold mb-2" htmlFor="email">Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-white/60 backdrop-blur-sm"
-                            placeholder="Enter your email"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-white/90 font-semibold mb-2" htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full p-3 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-white placeholder-white/60 backdrop-blur-sm"
-                            placeholder="Create a password"
-                            required
-                        />
-                    </div>
-                    {error && <p className="text-red-400 text-center bg-red-500/20 p-2 rounded-lg border border-red-400/30">{error}</p>}
-                    <button
-                        type="submit"
-                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                    >
-                        Create Account
-                    </button>
-                </form>
-                <p className="mt-6 text-center text-white/80">
-                    Already have an account? {' '}
-                    <button 
-                        onClick={() => navigate('/login')} 
-                        className="text-green-400 hover:text-green-300 font-semibold hover:underline transition-colors"
-                    >
-                        Sign In
-                    </button>
-                </p>
-            </div>
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await axios.post('http://localhost:5000/api/auth/register', {
+        name,
+        email,
+        password
+      });
+
+      navigate('/login');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-fade-in-up">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
+            Legal AI
+          </h1>
+          <p className="text-slate-400 text-lg">Professional Draft Generation</p>
         </div>
-    );
+
+        {/* Card */}
+        <div className="glass p-8 space-y-6">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">Create Account</h2>
+            <p className="text-slate-400">Join us to get started</p>
+          </div>
+
+          {error && (
+            <div className="bg-red-500 bg-opacity-20 border border-red-500 text-red-200 px-4 py-3 rounded-lg animate-pulse">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-field"
+                placeholder="John Doe"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-field"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-field"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="input-field"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="spinner w-5 h-5"></div>
+                  Creating account...
+                </>
+              ) : (
+                'Create Account'
+              )}
+            </button>
+          </form>
+
+          <div className="border-t border-slate-700 pt-6">
+            <p className="text-slate-400 text-center">
+              Already have an account?{' '}
+              <Link to="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition">
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Register;

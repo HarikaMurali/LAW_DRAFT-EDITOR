@@ -1,18 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import './App.css';
 
 function App() {
   return (
     <Router>
-      {/* Modern professional gradient background with improved typography */}
-      <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white font-inter antialiased">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-950">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </div>
     </Router>
