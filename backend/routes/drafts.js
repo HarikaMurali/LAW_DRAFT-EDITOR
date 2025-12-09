@@ -82,4 +82,54 @@ router.get('/:id', auth, async (req, res) => {
     }
 });
 
+// @route   DELETE /api/drafts/:id
+// @desc    Delete a draft by its ID
+// @access  Private
+router.delete('/:id', auth, async (req, res) => {
+    try {
+        const draft = await Draft.findById(req.params.id);
+        if (!draft) {
+            return res.status(404).json({ msg: 'Draft not found' });
+        }
+        
+        // Verify the draft belongs to the authenticated user
+        if (draft.userId.toString() !== req.user.userId) {
+            return res.status(403).json({ msg: 'Not authorized to delete this draft' });
+        }
+        
+        await Draft.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'Draft deleted successfully', id: req.params.id });
+    } catch (error) {
+        res.status(500).json({ msg: 'Server error', error: error.message });
+    }
+});
+
+// @route   PUT /api/drafts/:id
+// @desc    Update a draft by its ID
+// @access  Private
+router.put('/:id', auth, async (req, res) => {
+    try {
+        const draft = await Draft.findById(req.params.id);
+        if (!draft) {
+            return res.status(404).json({ msg: 'Draft not found' });
+        }
+        
+        // Verify the draft belongs to the authenticated user
+        if (draft.userId.toString() !== req.user.userId) {
+            return res.status(403).json({ msg: 'Not authorized to update this draft' });
+        }
+        
+        const { title, caseType, details, draftText } = req.body;
+        const updatedDraft = await Draft.findByIdAndUpdate(
+            req.params.id,
+            { title, caseType, details, draftText },
+            { new: true }
+        );
+        
+        res.json(updatedDraft);
+    } catch (error) {
+        res.status(500).json({ msg: 'Server error', error: error.message });
+    }
+});
+
 module.exports = router;

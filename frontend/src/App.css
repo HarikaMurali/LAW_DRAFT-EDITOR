@@ -8,9 +8,36 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #0f172a 0%, #4c1d95 50%, #0f172a 100%);
+  background: #000000;
   color: #e2e8f0;
   overflow-x: hidden;
+}
+
+/* Dark Mode Support */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
 }
 
 /* Animations */
@@ -232,6 +259,46 @@ body {
   animation: spin 0.8s linear infinite;
 }
 
+/* Chart Animations */
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulsePoint {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.1;
+  }
+}
+
+.line-animate {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 2s ease-out forwards;
+}
+
+.pulse-point {
+  animation: pulsePoint 2s ease-in-out infinite;
+}
+
+.hover-point {
+  transition: all 0.3s ease;
+}
+
+.hover-point:hover {
+  r: 7;
+  fill: #c084fc;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .glass {
@@ -243,3 +310,4 @@ body {
     font-size: 14px;
   }
 }
+

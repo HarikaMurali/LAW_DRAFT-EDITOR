@@ -1,59 +1,127 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import '../App.css';
 
 const DraftEditor = ({ draftText, onDraftChange, isLoading }) => {
-  const [copied, setCopied] = useState(false);
+  const [title, setTitle] = useState('');
+  const [proofreadResult, setProofreadResult] = useState('');
+  const [clauseSuggestions, setClauseSuggestions] = useState('');
+  const [isProofreading, setIsProofreading] = useState(false);
+  const [isSuggestingClauses, setIsSuggestingClauses] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(draftText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleSaveDraft = async () => {
+    if (!draftText.trim()) {
+      alert('Please enter some draft text to save.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        'http://localhost:5000/api/drafts',
+        { 
+          title: title || 'Untitled Draft',
+          draftText: draftText,
+          category: 'General'
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('Draft saved successfully!');
+    } catch (error) {
+      console.error('Failed to save draft:', error);
+      alert('Failed to save draft. Please try again.');
+    }
   };
 
-  const handleDownloadPDF = () => {
-    const element = document.createElement('a');
-    const file = new Blob([draftText], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'legal_draft.txt';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+  const handleAutoGenerate = async () => {
+    // Trigger the parent's generation flow or show a message
+    alert('Please use the "Generate New Draft" form to auto-generate content.');
+  };
+
+  const handleProofread = async () => {
+    if (!draftText.trim()) {
+      alert('Please enter some draft text to proofread.');
+      return;
+    }
+
+    setIsProofreading(true);
+    setProofreadResult('');
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/proofread', {
+        text: draftText
+      });
+      setProofreadResult(response.data.result || 'Proofreading complete. No major issues found.');
+    } catch (error) {
+      console.error('Proofreading failed:', error);
+      setProofreadResult('Proofreading service is currently unavailable. Please try again later.');
+    } finally {
+      setIsProofreading(false);
+    }
+  };
+
+  const handleSuggestClauses = async () => {
+    if (!draftText.trim()) {
+      alert('Please enter some draft text to get clause suggestions.');
+      return;
+    }
+
+    setIsSuggestingClauses(true);
+    setClauseSuggestions('');
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/suggest-clauses', {
+        text: draftText
+      });
+      setClauseSuggestions(response.data.suggestions || 'No additional clause suggestions at this time.');
+    } catch (error) {
+      console.error('Clause suggestion failed:', error);
+      setClauseSuggestions('Clause suggestion service is currently unavailable. Please try again later.');
+    } finally {
+      setIsSuggestingClauses(false);
+    }
   };
 
   return (
-    <div className="space-y-4">
-      {/* Editor Toolbar */}
-      <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={handleCopy}
-          disabled={!draftText}
-          className={`${draftText ? 'btn-primary' : 'opacity-50 cursor-not-allowed bg-slate-600'} text-sm`}
-        >
-          {copied ? '✓ Copied' : '📋 Copy'}
-        </button>
-        <button
-          onClick={handleDownloadPDF}
-          disabled={!draftText}
-          className={`${draftText ? 'btn-secondary' : 'opacity-50 cursor-not-allowed border-slate-600'} text-sm`}
-        >
-          📥 Download
-        </button>
-        <button
-          onClick={() => onDraftChange('')}
-          disabled={!draftText}
-          className={`${draftText ? 'btn-secondary' : 'opacity-50 cursor-not-allowed border-slate-600'} text-sm`}
-        >
-          🗑️ Clear
-        </button>
+    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "20px" }}>
+      {/* Title Input */}
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="Draft Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            fontSize: "16px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            backgroundColor: "white",
+            color: "#333"
+          }}
+        />
       </div>
 
-      {/* Editor */}
-      <div className="relative bg-slate-900 rounded-lg border border-slate-700 overflow-hidden">
+      {/* Draft Textarea */}
+      <div style={{ marginBottom: "20px", position: "relative" }}>
         {isLoading && (
-          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center z-10 rounded-lg">
-            <div className="text-center">
-              <div className="spinner mx-auto mb-4"></div>
-              <p className="text-white">Generating your draft...</p>
+          <div style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+            borderRadius: "5px"
+          }}>
+            <div style={{ textAlign: "center", color: "white" }}>
+              <div className="spinner" style={{ margin: "0 auto 10px" }}></div>
+              <p>Generating your draft...</p>
             </div>
           </div>
         )}
@@ -61,29 +129,159 @@ const DraftEditor = ({ draftText, onDraftChange, isLoading }) => {
         <textarea
           value={draftText}
           onChange={(e) => onDraftChange(e.target.value)}
-          className="w-full h-96 p-6 bg-white text-slate-900 font-mono text-sm border-none outline-none resize-none"
-          placeholder="Your legal draft will appear here..."
+          rows={15}
+          placeholder="Enter or generate your legal draft here..."
+          style={{
+            width: "100%",
+            padding: "15px",
+            fontSize: "14px",
+            fontFamily: "monospace",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            backgroundColor: "white",
+            color: "#333",
+            resize: "vertical"
+          }}
         />
       </div>
 
-      {/* Stats */}
+      {/* Action Buttons */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+        <button
+          onClick={handleSaveDraft}
+          style={{
+            padding: "12px 24px",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}
+        >
+          💾 Save Draft
+        </button>
+        <button
+          onClick={handleAutoGenerate}
+          style={{
+            padding: "12px 24px",
+            backgroundColor: "#28a745",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}
+        >
+          🤖 Auto Generate
+        </button>
+        <button
+          onClick={handleProofread}
+          disabled={isProofreading}
+          style={{
+            padding: "12px 24px",
+            backgroundColor: isProofreading ? "#999" : "#ffc107",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: isProofreading ? "not-allowed" : "pointer",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}
+        >
+          {isProofreading ? '⏳ Proofreading...' : '🔍 Proofread'}
+        </button>
+        <button
+          onClick={handleSuggestClauses}
+          disabled={isSuggestingClauses}
+          style={{
+            padding: "12px 24px",
+            backgroundColor: isSuggestingClauses ? "#999" : "#17a2b8",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: isSuggestingClauses ? "not-allowed" : "pointer",
+            fontSize: "14px",
+            fontWeight: "500"
+          }}
+        >
+          {isSuggestingClauses ? '⏳ Suggesting...' : '📝 Suggest Clauses'}
+        </button>
+      </div>
+
+      {/* Proofread Results */}
+      {proofreadResult && (
+        <div style={{
+          marginBottom: "20px",
+          padding: "15px",
+          backgroundColor: "#fff3cd",
+          border: "1px solid #ffc107",
+          borderRadius: "5px",
+          color: "#856404"
+        }}>
+          <h4 style={{ marginTop: 0, marginBottom: "10px", color: "#856404" }}>Proofreading Results:</h4>
+          <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{proofreadResult}</p>
+        </div>
+      )}
+
+      {/* Clause Suggestions */}
+      {clauseSuggestions && (
+        <div style={{
+          marginBottom: "20px",
+          padding: "15px",
+          backgroundColor: "#d1ecf1",
+          border: "1px solid #17a2b8",
+          borderRadius: "5px",
+          color: "#0c5460"
+        }}>
+          <h4 style={{ marginTop: 0, marginBottom: "10px", color: "#0c5460" }}>Suggested Clauses:</h4>
+          <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{clauseSuggestions}</p>
+        </div>
+      )}
+
+      {/* Draft Stats */}
       {draftText && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-slate-800 bg-opacity-50 rounded-lg p-4 text-center">
-            <p className="text-slate-400 text-sm">Words</p>
-            <p className="text-2xl font-bold text-purple-400">
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: "15px",
+          marginTop: "20px"
+        }}>
+          <div style={{
+            backgroundColor: "#f8f9fa",
+            padding: "15px",
+            borderRadius: "5px",
+            textAlign: "center",
+            border: "1px solid #dee2e6"
+          }}>
+            <p style={{ color: "#6c757d", fontSize: "14px", margin: "0 0 5px 0" }}>Words</p>
+            <p style={{ fontSize: "24px", fontWeight: "bold", color: "#007bff", margin: 0 }}>
               {draftText.split(/\s+/).filter(w => w).length}
             </p>
           </div>
-          <div className="bg-slate-800 bg-opacity-50 rounded-lg p-4 text-center">
-            <p className="text-slate-400 text-sm">Characters</p>
-            <p className="text-2xl font-bold text-purple-400">
+          <div style={{
+            backgroundColor: "#f8f9fa",
+            padding: "15px",
+            borderRadius: "5px",
+            textAlign: "center",
+            border: "1px solid #dee2e6"
+          }}>
+            <p style={{ color: "#6c757d", fontSize: "14px", margin: "0 0 5px 0" }}>Characters</p>
+            <p style={{ fontSize: "24px", fontWeight: "bold", color: "#28a745", margin: 0 }}>
               {draftText.length}
             </p>
           </div>
-          <div className="bg-slate-800 bg-opacity-50 rounded-lg p-4 text-center">
-            <p className="text-slate-400 text-sm">Paragraphs</p>
-            <p className="text-2xl font-bold text-purple-400">
+          <div style={{
+            backgroundColor: "#f8f9fa",
+            padding: "15px",
+            borderRadius: "5px",
+            textAlign: "center",
+            border: "1px solid #dee2e6"
+          }}>
+            <p style={{ color: "#6c757d", fontSize: "14px", margin: "0 0 5px 0" }}>Paragraphs</p>
+            <p style={{ fontSize: "24px", fontWeight: "bold", color: "#ffc107", margin: 0 }}>
               {draftText.split('\n\n').filter(p => p.trim()).length}
             </p>
           </div>

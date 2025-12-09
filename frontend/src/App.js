@@ -3,17 +3,30 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import './App.css';
+import DraftsPage from './pages/DraftsPage';
+import TemplatesPage from './pages/TemplatesPage';
+import HistoryPage from './pages/HistoryPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import SettingsPage from './pages/SettingsPage';
+import LandingPage from './pages/LandingPage';
+import ResearchPage from './pages/ResearchPage';
 
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-950">
+      {/* Modern professional gradient background with improved typography */}
+      <div className="bg-black min-h-screen text-white font-inter antialiased">
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="/drafts" element={<DraftsPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/research" element={<ResearchPage />} />
         </Routes>
       </div>
     </Router>

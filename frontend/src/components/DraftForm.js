@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../App.css';
 
-const DraftForm = ({ onGenerateDraft, isLoading }) => {
+const DraftForm = ({ onGenerateDraft, isLoading, templateData }) => {
   const [caseType, setCaseType] = useState('Civil');
   const [details, setDetails] = useState('');
   const [jurisdiction, setJurisdiction] = useState('');
   const [error, setError] = useState('');
+
+  // Load template data when provided
+  useEffect(() => {
+    if (templateData) {
+      setCaseType(templateData.category);
+      setDetails(`Template: ${templateData.title}\n\n${templateData.description}\n\nPlease provide your case details below:\n`);
+    }
+  }, [templateData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
