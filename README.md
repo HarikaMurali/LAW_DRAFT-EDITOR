@@ -292,14 +292,6 @@ This project is licensed under the MIT License.
 - **MongoDB** for the database platform
 - **React & Node.js** communities
 
-## 📞 Support
-
-If you encounter any issues or need assistance:
-- 🐛 **Issues**: [GitHub Issues](https://github.com/HarikaMurali/LAW_DRAFT-EDITOR/issues)
-- 📧 **Email**: support@lexicraft.com or tech@lexicraft.com
-- 📞 **Phone**: +91 123 456 7890
-- 🏢 **Address**: 123 Legal Avenue, MG Road, Bangalore, Karnataka 560001, India
-
 ## 🔒 Security
 
 For security documentation and best practices, see [SECURITY.md](./SECURITY.md)
